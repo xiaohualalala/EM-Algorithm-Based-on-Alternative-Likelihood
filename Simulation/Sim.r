@@ -12,6 +12,7 @@ sourceCpp("../Simulation/MixNB/SimulateMixNB.cpp")
 sourceCpp("../Simulation/ZINB/SimulateZINB.cpp")
 sourceCpp("../MLE/C/ZINB_MLE.cpp")
 sourceCpp("../MLE/C/NB_MLE.cpp")
+source('../Simulation/MixNB/VisualMixNB.r')
 
 # 设置随机数种子
 set.seed(123)
@@ -128,13 +129,8 @@ source("../Simulation/MixNB/VisualMixNB.r")
 
 # 双样本
 # 模拟参数
-weights <- c(0.4, 0.6)
-means <- c(100, 200)
-vars <- c(250, 250)
-probs <- means / vars
-sizes <- means^2 / (vars - means)
-
 set.seed(123)
+weights <- c(0.4, 0.6)
 probs <- c(0.25, 0.5)
 sizes <- c(20, 150)
 
@@ -142,8 +138,17 @@ sizes <- c(20, 150)
 res2 <- SimulateMixNB(probs, sizes, weights, 2000)
 
 # 对比图
-p3 <- plotHistDensity(res$observations, res$estimation, res$accuracy)
+p3 <- plotHistDensity(res2$observations, res2$estimation, res2$accuracy)
 ggsave("/Users/guosa/Desktop/毕业论文/figures/mix2.pdf", p3)
+
+set.seed(234)
+weights <- c(0.4, 0.6)
+means <- c(100, 150)
+vars <- c(240, 480)
+probs <- means / vars
+sizes <- means^2 / (vars - means)
+
+ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix2.pdf", p3)
 
 # 运行100次，观察准确率与迭代次数
 data <- SimulateMixNBs(probs, sizes, weights, 100, 2000)
@@ -187,12 +192,8 @@ ggplot(df_iterations, aes(x = Type, y = Value)) +
 ggsave("/Users/guosa/Desktop/毕业论文/figures/mix5.pdf", p6)
 
 # 模拟参数
-weights <- c(0.2, 0.5, 0.3)
-means <- c(100, 200, 300)
-vars <- c(1000, 1000, 1000)
-probs <- means / vars
-sizes <- means^2 / (vars - means)
 
+weights <- c(0.2, 0.5, 0.3)
 probs <- c(0.1, 0.2, 0.3)
 sizes <- c(10, 50, 150)
 
@@ -203,6 +204,15 @@ res3 <- SimulateMixNB(probs, sizes, weights, 2000)
 p4 <- plotHistDensity(res3$observations, res3$estimation, res3$accuracy)
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/mix3.pdf", p4)
+
+set.seed(234)
+weights <- c(0.2, 0.5, 0.3)
+means <- c(120, 180, 240)
+vars <- c(300, 600, 300)
+probs <- means / vars
+sizes <- means^2 / (vars - means)
+
+ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix3.pdf", p4)
 
 # 运行100次，观察准确率与迭代次数
 data <- SimulateMixNBs(probs, sizes, weights, 100, 2000)
@@ -228,7 +238,9 @@ weight_mean <- sapply(1:K, function(i) mean(sapply(df_weight, `[`, i)))
 weight_sd <- sapply(1:K, function(i) sd(sapply(df_weight, `[`, i)))
 
 p5 <- grid.arrange(p3, p4, nrow = 2)
-ggsave("/Users/guosa/Desktop/毕业论文/figures/mix6.pdf", p5)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/mix6.pdf", p5, width = 10, height = 8, dpi = 300)
+
+ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix6.pdf", p5)
 
 # confusion matrix
 conf_matrix <- confusionMatrix(as.factor(res$predicted_labels), as.factor(res$true_labels))
@@ -315,8 +327,8 @@ ggsave("/Users/guosa/Desktop/毕业论文/figures/zinb1.pdf", p8)
 # Rate 
 set.seed(123)
 
-probs <- seq(0.2, 0.8, 0.2)
-sizes <- seq(1, 10, 1)
+probs <- seq(0.1, 0.9, 0.2)
+sizes <- seq(1, 20, 2)
 rates <- SimulateRates(probs,sizes,20,2000)
 
 p9 <- 
@@ -329,27 +341,28 @@ ggplot(rates, aes(x = size, y = avg_rate, color = as.factor(prob))) +
        y = "Convergence Rate", 
        color = "Prob", 
        title = "Convergence Rate vs Size") +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/rate1.pdf", p9)
 
-probs <- seq(0.1, 0.9, 0.1)
-sizes <- seq(2, 8, 2)
+probs <- seq(0.1, 0.9, 0.05)
+sizes <- seq(1, 10, 2)
 rates <- SimulateRates(probs,sizes,20,2000)
  
 p10 <- 
 ggplot(rates, aes(x = prob, y = avg_rate, color = as.factor(size))) +
   geom_line(size = 1) +
   geom_point() +
+  ylim(0.4, 1) +
   geom_errorbar(aes(ymin = avg_rate - sd_rate, ymax = avg_rate + sd_rate), width = 0.01, linetype = "twodash") +
   scale_color_brewer(palette = "Set1") + 
   labs(x = "Prob", y = "Convergence Rate", color = "Size", title = "Convergence Rate vs Prob") +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/rate2.pdf", p10)
 
-p11 <- grid.arrange(p9, p10, nrow = 2)
-ggsave("/Users/guosa/Desktop/毕业论文/figures/rates.pdf", p11)
+p11 <- grid.arrange(p9, p10, ncol = 2)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/rates.pdf", p11, width = 16, height = 6, dpi = 300)
 
 prob <- 0.6
 size <- 1
@@ -362,33 +375,34 @@ for (i in 1:200){
 p12 <- 
 ggplot(rates, aes(x = n, y = rate)) +
   geom_point(color='red', size=0.8) +
-  labs(x = "n", y = "Convergence Rate") +
-  theme_minimal()+
-  ylim(0, 1) +
-  annotate("text", x = max(rates$n), y = 1, label = "Size=1, Prob=0.6", hjust=1, vjust=1, color = "blue", size = 7)
+  labs(x = "n", y = "Convergence Rate vs Sample Size") +
+  theme_bw()+
+  ylim(0.5, 0.65) +
+  annotate("text", x = max(rates$n), y = 0.65, label = "Size=1 \\ Prob=0.6", hjust=1, vjust=1, color = "blue", size = 5)
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/rate3.pdf", p12)
 
+library(Rcpp)
 sourceCpp("../Simulation/NB/SimulateNB.cpp")
 
 set.seed(123)
 
-probs <- seq(0.2, 0.8, 0.2)
-sizes <- seq(1, 10, 1)
+probs <- seq(0.1, 0.9, 0.2)
+sizes <- seq(1, 20, 2)
 errors <- SimulateErrors(probs,sizes,20,2000)
 
 p13 <- 
-ggplot(errors, aes(x = size, y = avg_error_2, color = as.factor(prob))) +
+ggplot(errors, aes(x = size, y = avg_error_1, color = as.factor(prob))) +
   geom_line(size = 1) +
   geom_point() +
-  geom_errorbar(aes(ymin = avg_error_2 - sd_error_2, ymax = avg_error_2 + sd_error_2), width = 0.1, linetype = "twodash") +
+  geom_errorbar(aes(ymin = avg_error_1 - sd_error_1, ymax = avg_error_1 + sd_error_1), width = 0.1, linetype = "twodash") +
   scale_color_brewer(palette = "Set1") + 
-  ylim(0, 0.2) + 
+  ylim(0, 0.05) + 
   labs(x = "Size", 
        y = bquote("Standard Error (" ~ phi[1] ~ ")"), 
        color = "Prob", 
        title = expression("Standard Error (" ~ phi[1] ~ ") vs Size" )) +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/error1.pdf", p13)
 
@@ -398,31 +412,31 @@ ggplot(errors, aes(x = size, y = avg_error_2, color = as.factor(prob))) +
   geom_point() +
   geom_errorbar(aes(ymin = avg_error_2 - sd_error_2, ymax = avg_error_2 + sd_error_2), width = 0.1, linetype = "twodash") +
   scale_color_brewer(palette = "Set1") + 
-  ylim(0, 0.5) + 
+  ylim(0, 1) + 
   labs(x = "Size", 
        y = bquote("Standard Error (" ~ phi[2] ~ ")"), 
        color = "Prob",
        title = expression("Standard Error (" ~ phi[2] ~ ") vs Size" )) +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/error2.pdf", p14)
 
-probs <- seq(0.1, 0.9, 0.1)
-sizes <- seq(2, 8, 2)
+probs <- seq(0.1, 0.9, 0.05)
+sizes <- seq(1, 10, 2)
 errors <- SimulateErrors(probs,sizes,20,2000)
 
 p15 <- 
-ggplot(errors, aes(x = prob, y = avg_error_2, color = as.factor(size))) +
+ggplot(errors, aes(x = prob, y = avg_error_1, color = as.factor(size))) +
   geom_line(size = 1) +
   geom_point() +
-  geom_errorbar(aes(ymin = avg_error_2 - sd_error_2, ymax = avg_error_2 + sd_error_2), width = 0.01,  linetype = "twodash") +
+  geom_errorbar(aes(ymin = avg_error_1 - sd_error_1, ymax = avg_error_1 + sd_error_1), width = 0.01,  linetype = "twodash") +
   scale_color_brewer(palette = "Set1") + 
-  ylim(0, 0.2) + 
+  ylim(0, 0.05) + 
   labs(x = "Prob", 
        y = bquote("Standard Error (" ~ phi[1] ~ ")"), 
        color = "Size",
        title = expression("Standard Error (" ~ phi[1] ~ ") vs Prob" )) +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/error3.pdf", p15)
 
@@ -437,233 +451,35 @@ ggplot(errors, aes(x = prob, y = avg_error_2, color = as.factor(size))) +
        y = bquote("Standard Error (" ~ phi[2] ~ ")"), 
        color = "Size",
        title = expression("Standard Error (" ~ phi[2] ~ ") vs Prob" )) +
-  theme_minimal()
+  theme_bw()
 
 ggsave("/Users/guosa/Desktop/毕业论文/figures/error4.pdf", p16)
 
 p17 <- grid.arrange(p13,p15,nrow = 2)
-ggsave("/Users/guosa/Desktop/毕业论文/figures/error_2.pdf", p17)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/error_1.pdf", p17)
 
 p18 <- grid.arrange(p14,p16,nrow = 2)
 ggsave("/Users/guosa/Desktop/毕业论文/figures/error_2.pdf", p18)
 
+p19 <- grid.arrange(p13,p15,p14,p16,nrow = 2, ncol = 2)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/error_3.pdf", p19, width = 16, height = 12, dpi=400)
+
+source("../Simulation/scRNA.r", chdir = TRUE)
 
 
 
 
+# 定义theta取值
+theta <- seq(0.001, 0.999, length.out = 1000)
 
+# 计算函数值 f(theta) = log(-1/log(1-theta))
+f_theta <- log(-1 / log(1 - theta)) + log(theta)
 
-# EM与BFGS比较
+# 绘图
+plot(theta, f_theta, type = "l", col = "blue", lwd = 2,
+     main = expression(paste("Plot of ", log(-1/log(1-theta)))),
+     xlab = expression(theta),
+     ylab = expression(log(-1/log(1-theta))))
 
-library(bbmle)
-
-# 生成一些负二项分布的样本数据
-set.seed(123)
-data <- rnbinom(100, size = 5, prob = 0.1)
-
-# 定义负二项分布的负对数似然函数
-nll <- function(size, prob) {
-  -sum(dnbinom(data, size = size, prob = prob, log = TRUE))
-}
-
-# 使用mle2函数进行参数估计
-fit <- mle2(nll, start = list(size = 1, prob = 0.1))
-summary(fit)$Coefficients
-
-
-compare <- function(prob, size, zero, sample_size) {
-    sample <- unlist(SamplesZINB(prob, size, zero, 1, sample_size))
-
-    res_BFGS <- zeroinfl(count ~ 1, data = data.frame(count = sample), dist = "negbin")
-    size_BFGS <- res_BFGS$theta
-    mu_BFGS <- exp(res_BFGS$coefficients$count[["(Intercept)"]])
-    zero_BFGS <- exp(res_BFGS$coefficients$zero[["(Intercept)"]]) / (1 + exp(res_BFGS$coefficients$zero[["(Intercept)"]]))
-    prob_BFGS <- size_BFGS / (size_BFGS + mu_BFGS)
-
-    res_EM <- ZINB_MLE(sample)
-
-    df <- data.frame(
-        prob = prob,
-        EM_prob = res_EM$Parameter_Estimates$eProb,
-        BFGS_prob = prob_BFGS,
-        size = size,
-        EM_size = res_EM$Parameter_Estimates$eSize,
-        BFGS_size = size_BFGS,
-        zero = zero,
-        EM_zero = res_EM$Parameter_Estimates$eZero,
-        BFGS_zero = zero_BFGS
-    )
-
-    return(df)
-}
-
-probs <- seq(0.2, 0.4, 0.2)
-sizes <- seq(6, 10, 2)
-zeros <- seq(0.1, 0.2, 0.1)
-parameters <- expand.grid(prob = probs, size = sizes, zero = zeros)
-EM_BFGS = data.frame()
-for (i in 1:nrow(parameters)) {
-    df <- compare(parameters$prob[i], parameters$size[i], parameters$zero[i], sample_size = 1000)
-    EM_BFGS <- rbind(EM_BFGS, df)
-}
-EM_BFGS
-
-
-
-
-
-# gene data
-library(readxl)
-gene_data <- read_excel("../Simulation/ZINB/gene.xlsx")
-head(gene_data)
-# 行为基因，列为样本
-
-# 计算每个基因在所有样本中的平均表达量
-average_expression_before <- rowMeans(gene_data[, -1])
-
-# lop1p=log(1+x)
-ggplot(data.frame(Expression = log1p(average_expression_before)), aes(x = Expression)) +
-    geom_histogram(bins = 80, fill = "skyblue", color = "black") +
-    theme_minimal() +
-    ggtitle("Histogram of Average Log-transformed Expression") +
-    xlab("Log-transformed Average Expression") +
-    ylab("Frequency")
-
-# 直方图中接近零的表达量区域高频:存在大量低表达或未表达的基因
-# 直方图的尾部延伸较远，且尾部的条形较低但持续存在:有一些基因具有较高的表达水平
-# 数据分布
-# 峰值靠近左侧:大多数基因表达量较低
-
-# 过滤掉低表达基因
-keep <- rowSums(gene_data[, -1] >= 5) >= 2 # 至少在两个样本中有5个以上的计数
-filtered_data <- gene_data[keep, ]
-
-# 输出过滤后的结果
-cat("Number of genes before filtering:", nrow(gene_data), "\n")
-cat("Number of genes after filtering:", nrow(filtered_data), "\n")
-
-average_expression_after <- rowMeans(filtered_data[, -1])
-
-# 绘制过滤后直方图
-ggplot(data.frame(Expression = log1p(average_expression_after)), aes(x = Expression)) +
-    geom_histogram(bins = 80, fill = "skyblue", color = "black") +
-    theme_minimal() +
-    ggtitle("Histogram of Average Log-transformed Expression After Filtering") +
-    xlab("Log-transformed Average Expression") +
-    ylab("Frequency")
-
-
-# 标准化
-# 若已知样本信息和实验信息
-if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-}
-BiocManager::install(version = "3.16")
-BiocManager::install("DESeq2")
-
-# CPM标准化
-# 计算每个样本的总计数
-total_counts <- colSums(filtered_data[, -1])
-
-# 用每个样本的总计数除以每个表达值，然后乘以10^6进行标准化
-cpm_data <- t(t(filtered_data[, -1]) / total_counts * 10^6)
-head(cpm_data)
-
-# 进行对数转换以使数据更加正态分布
-log_cpm_data <- log1p(cpm_data)
-
-# 基因数量很大，随机选择一些基因
-set.seed(123)
-sample <- log_cpm_data[sample(1:nrow(log_cpm_data), 10), ]
-
-# 主成分分析
-pca_res <- prcomp(t(log_cpm_data), scale. = TRUE)
-plot(pca_res$x[, 1:2], asp = 1, xlab = "PC1", ylab = "PC2", main = "PCA of High-variance Genes")
-
-# 假设gene_data是你的数据框架，且第一列为GeneID
-results_list <- list() # 用于存储每个基因的拟合结果
-gene_idx <- 2
-for (gene_idx in 1:100) {
-    # 提取该基因的表达数据
-    X <- as.numeric(filtered_data[gene_idx, -1]) # 排除GeneID列
-
-    # 调用ZINB_MLE函数拟合模型
-    result <- ZINB_MLE(X)$Parameter_Estimates
-
-    # 将结果存储在列表中
-    results_list[[gene_idx]] <- result
-}
-
-# 检查前几个基因的结果
-results_list[1] # 假设你想查看第一个基因的结果
-
-
-
-
-
-# ZINB回归模型对比
-zinb <- read.csv("https://stats.idre.ucla.edu/stat/data/fish.csv")
-zinb <- within(zinb, {
-    nofish <- factor(nofish)
-    livebait <- factor(livebait)
-    camper <- factor(camper)
-})
-
-summary(zinb)
-
-m1 <- zeroinfl(count ~ 1,
-    data = zinb, dist = "negbin"
-)
-m1$coefficients
-summary(m1)
-
-source("../Reg/ZINB_Reg.r")
-
-ZINB_EM_IWLS(count ~ child, data = zinb)$coefficients
-
-m <-
-    NB <- SamplesNB(0.9, 5, 10, 1000)
-ZINB <- SamplesZINB(0.5, 1.0, 0.2, 10, 1000)
-probs <- c(0.5, 0.3)
-sizes <- c(4, 8)
-weights <- c(0.6, 0.4)
-zero <- c(0.2, 0.4)
-MixNB <- SamplesMixNB(probs, sizes, weights, 1, 2000)
-MixZINB <- SamplesMixZINB(probs, sizes, zero, weights, 1, 2000)
-
-
-
-
-
-
-# Reg
-# NB
-source("/Users/guosa/Desktop/日常/科研/负二项分布/code/cpp_code/NB/NB_Reg.r")
-n <- 4000
-X1 <- rnorm(n)
-X2 <- rnorm(n)
-
-mu <- exp(1 + 0.2 * X1 - 0.4 * X2)
-Y <- rnbinom(n, size = 10, mu = mu)
-data <- data.frame(Y, X1, X2)
-NB_EM_IWLS(Y ~ X1 + X2, data)$coefficients
-
-prob <- exp(1 + 0.2 * X1 - 0.4 * X2) / (1 + exp(1 + 0.2 * X1 - 0.4 * X2))
-Y <- rnbinom(n, size = 10, prob = prob)
-data <- data.frame(Y, X1, X2)
-NB_EM_IWLS(Y ~ X1 + X2, data, type = "probability", link = "logit")$coefficients
-
-# ZINB
-source("/Users/guosa/Desktop/日常/科研/负二项分布/code/cpp_code/ZINB/ZINB_Reg.r")
-mu <- exp(1 + 0.3 * X1 - 0.4 * X2)
-size <- 5
-pi <- 0.2
-prob <- size * (1 - pi) / (mu + size * (1 - pi))
-Y <- rzinb(n, size = size, prob = prob, pi = pi)
-data <- data.frame(Y, X1, X2)
-ZINB_EM_IWLS(Y ~ X1 + X2, data)$coefficients
-
-prob <- exp(1 + 0.2 * X1 - 0.4 * X2) / (1 + exp(1 + 0.2 * X1 - 0.4 * X2))
-Y <- rzinb(n, size = 10, prob = prob, pi = 0.4)
-data <- data.frame(Y, X1, X2)
-ZINB_EM_IWLS(Y ~ X1 + X2, data, type = "probability", link = "logit")$coefficients
+# 添加参考线
+abline(h = 0, col = "gray", lty = 2)

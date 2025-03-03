@@ -64,13 +64,34 @@ fit2 <- ZINB_Reg(
   data = data,
   type = "bWald"
 )
-
 fit$summary
 fit2$summary
 
 library(pscl)
 fit3 <- zeroinfl(Y ~ X1 | Z1 + Z2, data = data, dist = "negbin")
 summary(fit3)
+
+library(glmmTMB)
+fit4 <- glmmTMB(
+  formula = Y ~ X1,  
+  ziformula = ~ Z1 + Z2,              
+  family = nbinom2,                  
+  data = data
+)
+fit4 <- summary(model)
+
+fit5 <- gamlssML(
+  Y ~ X1 | Z1 + Z2, 
+  data = data, 
+  family="ZINBI")
+
+fit5 <- gamlssML(
+  formula = Y ~  X1,        # 计数部分（mu）
+  nu.formula = ~ 1 + Z1 + Z2,  # 零膨胀部分（nu）
+  family = ZINBI,
+  data = data
+)
+fit4
 
 predict2 <- function(fit, formula_count, formula_zero, data) {
     Z <- model.matrix(formula_zero, data)
@@ -103,47 +124,74 @@ compare_zinb <- function(beta, gamma, n = 2000) {
                      data = data,
                      type = "bWald")
     fit2 <- zeroinfl(Y ~ X1 | Z1 + Z2, data = data, dist = "negbin")
+    fit3 <- summary(glmmTMB(formula = Y ~ X1,  ziformula = ~ Z1 + Z2, family = nbinom2, data = data))
+
     bias1_count <- mean(fit1$coefficients_count - beta)
     bias1_sd_count <- sd(fit1$coefficients_count - beta)
     bias1_zero <- mean(fit1$coefficients_zero - gamma)
     bias1_sd_zero <- sd(fit1$coefficients_zero - gamma)
+
     bias2_count <- mean(fit2$coefficients$count - beta)
     bias2_sd_count <- sd(fit2$coefficients$count - beta)
     bias2_zero <- mean(fit2$coefficients$zero - gamma)
     bias2_sd_zero <- sd(fit2$coefficients$zero - gamma)
 
+    bias3_count <- mean(fit3$coefficients$cond[, 1] - beta)
+    bias3_sd_count <- sd(fit3$coefficients$cond[, 1] - beta)
+    bias3_zero <- mean(fit3$coefficients$zi[, 1] - gamma)
+    bias3_sd_zero <- sd(fit3$coefficients$zi[, 1] - gamma)
+
     sd1_count <- mean(fit1$bwald$count$SE)
     sd1_zero <- mean(fit1$bwald$zero$SE)
+
     sd2_count <- mean(summary(fit2)$coefficients$count[, 2])
     sd2_zero <- mean(summary(fit2)$coefficients$zero[, 2])
 
+    sd3_count <- mean(fit3$coefficients$cond[, 2])
+    sd3_zero <- mean(fit3$coefficients$zi[, 2])
+
     rmse1_count <- sqrt(mean((fit1$coefficients_count - beta)^2))
     rmse1_zero <- sqrt(mean((fit1$coefficients_zero - gamma)^2))
+
     rmse2_count <- sqrt(mean((fit2$coefficients$count - beta)^2))
     rmse2_zero <- sqrt(mean((fit2$coefficients$zero - gamma)^2))
-    
+
+    rmse3_count <- sqrt(mean((fit3$coefficients$cond[, 1] - beta)^2))
+    rmse3_zero <- sqrt(mean((fit3$coefficients$zi[, 1] - gamma)^2))    
+
     return(list(
         Bias = c(Alg_bWald_count = bias1_count,
                  Alg_bWald_zero = bias1_zero,
                  Alg_zein_count = bias2_count,
-                 Alg_zein_zero = bias2_zero),
+                 Alg_zein_zero = bias2_zero,
+                 Alg_tmb_count = bias3_count,
+                 Alg_tmb_zero = bias3_zero),
         Bias_SD = c(Alg_bWald_count = bias1_sd_count,
                     Alg_bWald_zero = bias1_sd_zero,
                     Alg_zein_count = bias2_sd_count,
-                    Alg_zein_zero = bias2_sd_zero),
+                    Alg_zein_zero = bias2_sd_zero,
+                    Alg_tmb_count = bias3_sd_count,
+                    Alg_tmb_zero = bias3_sd_zero),
         SD = c(Alg_bWald_count = sd1_count,
                Alg_bWald_zero = sd1_zero,
                Alg_zein_count = sd2_count,
-               Alg_zein_zero = sd2_zero),
+               Alg_zein_zero = sd2_zero,
+               Alg_tmb_count = sd3_count,
+               Alg_tmb_zero = sd3_zero),
         RMSE = c(Alg_bWald_count = rmse1_count,
                Alg_bWald_zero = rmse1_zero,
                Alg_zein_count = rmse2_count,
-               Alg_zein_zero = rmse2_zero)
+               Alg_zein_zero = rmse2_zero,
+               Alg_tmb_count = rmse3_count,
+               Alg_tmb_zero = rmse3_zero)
     ))
 }
 res4 <- compare_zinb(beta = c(2, -0.5), gamma = c(-1, 1.5, -0.5))
-xtable(as.data.frame(res4), digits = 3)
 
+res4 <- compare_zinb(beta = c(2, -0.3, -0.5), gamma = c(-1, 1.5, -0.5))
+
+xtable(as.data.frame(res4), digits = 3)
+library(xtable)
 
 indices <- which(res$pred_source == 'zero_part')
 zero <- data[indices,]
@@ -172,9 +220,5 @@ fit5 <- glmm.zinb(
   zi_fixed = ~ Z1 + Z2          
 )
 
-# 无法下载R包
-library(glmmTMB)
-f0 = glmmTMB(Y ~ X1, data = data, 
-            family = nbinom2, zi = ~ Z1 + Z2)
 
 

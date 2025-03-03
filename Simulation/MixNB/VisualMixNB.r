@@ -26,11 +26,11 @@ plotHistDensity <- function(observations, estimation, accuracy) {
     density_data <- data.frame(x = range, density = density)
     # Plotting using ggplot2
     p <- ggplot(data, aes(x = Value)) +
-        geom_histogram(aes(y = ..density..), binwidth = diff(range(observations)) / 50, fill = "skyblue", color = "white") +
+        geom_histogram(aes(y = ..density..), binwidth = diff(range(observations)) / 55, fill = "skyblue", color = "white") +
         geom_line(data = density_data, aes(x = x, y = density), color = "red", size = 1) +
-        theme_minimal() +
+        theme_bw() +
         labs(x = "Value", y = "Density") + 
-        annotate("text", x = Inf, y = Inf, label = paste("Accuracy:", accuracy), hjust = 1.1, vjust = 2, size = 8, color = "blue")
+        annotate("text", x = Inf, y = Inf, label = paste("Accuracy:", accuracy*100, "%"), hjust = 1.1, vjust = 2, size = 4, color = "blue")
 
     # Display the plot
     print(p)

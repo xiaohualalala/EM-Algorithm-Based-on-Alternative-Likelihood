@@ -158,12 +158,12 @@ List mixNB_MLE(NumericVector X, int nbS, NumericVector avg = NumericVector(), Nu
         }
 
         Rcpp::Function order("order");
-        NumericVector ordAvg = order(esAvg); // order of mean
-        esAvg = reorder(esAvg, ordAvg);      
-        eSize = reorder(eSize, ordAvg);      
-        eWeight = reorder(eWeight, ordAvg);  
-        eProb = reorder(eProb, ordAvg);      
-        esVar = reorder(esVar, ordAvg);      
+        NumericVector ord = order(eWeight); // order of mean
+        esAvg = reorder(esAvg, ord);      
+        eSize = reorder(eSize, ord);      
+        eWeight = reorder(eWeight, ord);  
+        eProb = reorder(eProb, ord);      
+        esVar = reorder(esVar, ord);      
 
         // Check for convergence
         mat newParam = join_cols(esAvg_mat, eSize_mat, eWeight_mat);

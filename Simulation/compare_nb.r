@@ -38,10 +38,10 @@ compare_methods <- function(prob_values, size_values, starting_values = NULL, nu
             for (i in 1:num_samples) {
                 data <- samples[[i]]
                 starting_values <- c(runif(1, 0.1, 50), runif(1, 0.01, 0.99))
-                new_res <- newton_raphson(data, starting_values, max_iter = 500)
-                scoring_res <- fisher_scoring(data, starting_values, max_iter = 500)
-                em_res <- EM(data, starting_values, max_iter = 500)
-                alem_res <- NB_MLE(data, iterMax = 500, init_values = starting_values, verbose = FALSE)
+                new_res <- newton_raphson(data, starting_values, max_iter = 5000)
+                scoring_res <- fisher_scoring(data, starting_values, max_iter = 5000)
+                em_res <- EM(data, starting_values, max_iter = 5000)
+                alem_res <- NB_MLE(data, iterMax = 5000, init_values = starting_values, verbose = FALSE)
 
                 new_size[i] <- new_res$params[1]
                 new_prob[i] <- new_res$params[2]
@@ -144,7 +144,7 @@ compare_methods <- function(prob_values, size_values, starting_values = NULL, nu
     return(df)
 }
 
-set.seed(123)
+set.seed(234)
 
 prob_values <- c(0.8)
 size_values <- c(8)

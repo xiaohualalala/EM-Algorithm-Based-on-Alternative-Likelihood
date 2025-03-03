@@ -12,7 +12,8 @@ EM <- function(data, starting_values = NULL, tol = 1e-5, max_iter = 50) {
     n <- length(data)
     params <- starting_values
     converged <- FALSE
-    
+    inner_iter <- 0
+
     for (iter in 1:max_iter) {
         r <- params[1]
         p <- params[2]
@@ -28,15 +29,17 @@ EM <- function(data, starting_values = NULL, tol = 1e-5, max_iter = 50) {
         r_func <- function(a) {
             log(a) - digamma(a) - log(mean(z)) + mean(log_z)
         }
-        r_new <- tryCatch(
+        res <- tryCatch(
             {
-                uniroot(r_func, c(0.01, 100), tol = .Machine$double.eps)$root
+                uniroot(r_func, c(0.01, 100), tol = .Machine$double.eps)
             },
             error = function(e) {
                 warning("Failed to converge in uniroot. Stopping iterations.")
                 break
             }
         )
+        r_new <- res$root
+        inner_iter <- inner_iter + res$iter
 
         p_new <- beta_new / (1 + beta_new)
 
@@ -59,5 +62,5 @@ EM <- function(data, starting_values = NULL, tol = 1e-5, max_iter = 50) {
     end_time <- Sys.time() # 结束时间
     duration <- difftime(end_time, start_time, units = "secs") # 计算时间
 
-    return(list(params = params, iterations = iter, converged = converged, duration = duration))
+    return(list(params = params, iterations = iter + inner_iter, converged = converged, duration = duration))
 }

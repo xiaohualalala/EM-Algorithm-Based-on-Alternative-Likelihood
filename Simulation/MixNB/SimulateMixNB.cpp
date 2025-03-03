@@ -45,6 +45,7 @@ List SimulateMixNB(NumericVector probs, NumericVector sizes, NumericVector weigh
     NumericVector eSize = estimation["eSize"];
     NumericVector eProb = estimation["eProb"];
     NumericVector eWeight = estimation["eWeight"];
+    NumericMatrix postProbs(N, K);
 
     List stats = result["Statistics"];
     int iterations = stats["Iterations"];
@@ -64,19 +65,20 @@ List SimulateMixNB(NumericVector probs, NumericVector sizes, NumericVector weigh
         for (int k = 0; k < K; ++k)
         {
             probability[k] = temp[k] / total_prob;
+            postProbs(i, k) = probability[k];
         }
         
         // Find the index of the maximum probability
         predicted_labels[i] = which_max(probability) + 1; // C++ index starts at 0, R starts at 1
-        prediction[i] = max(probability);
     }
+    prediction = postProbs(_, 0);
 
     // Calculate accuracy
     double accuracy = sum(true_labels == predicted_labels) / (1.0*N);
 
     return List::create(Named("observations") = observations,
                         Named("estimation") = estimation,
-                        Named("prediction") = prediction,
+                        Named("postProbs") = postProbs,
                         Named("true_labels") = true_labels,
                         Named("predicted_labels") = predicted_labels, 
                         Named("iterations") = iterations, 

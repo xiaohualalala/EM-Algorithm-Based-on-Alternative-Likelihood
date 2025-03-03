@@ -314,7 +314,11 @@ DEalem <- function(counts, group, parallel = FALSE, BPPARAM = bpparam()) {
             options(warn = 0)
             options(show.error.messages = TRUE)
             if ("try-error" %in% class(nb_try)) {
+                options(show.error.messages = FALSE)
+                options(warn = -1)
                 nb_try_twice <- try(NB_Reg(formula = counts_1 ~ 1, data = as.data.frame(counts_1), verbose = FALSE), silent = TRUE)
+                options(warn = 0)
+                options(show.error.messages = TRUE)
                 if ("try-error" %in% class(nb_try_twice)) {
                     print("MLE of NB failed!")
                     results_gene[1, "Remark"] <- "NB failed!"
@@ -380,7 +384,11 @@ DEalem <- function(counts, group, parallel = FALSE, BPPARAM = bpparam()) {
             options(warn = 0)
             options(show.error.messages = TRUE)
             if ("try-error" %in% class(nb_try)) {
+                options(show.error.messages = FALSE)
+                options(warn = -1)
                 nb_try_twice <- try(NB_Reg(formula = counts_2 ~ 1, data = as.data.frame(counts_2), verbose = FALSE), silent = TRUE)
+                options(warn = 0)
+                options(show.error.messages = TRUE)
                 if ("try-error" %in% class(nb_try_twice)) {
                     print("MLE of NB failed!")
                     results_gene[1, "Remark"] <- "NB failed!"
@@ -439,7 +447,11 @@ DEalem <- function(counts, group, parallel = FALSE, BPPARAM = bpparam()) {
             options(warn = 0)
             options(show.error.messages = TRUE)
             if ("try-error" %in% class(nb_try)) {
+                options(show.error.messages = FALSE)
+                options(warn = -1)
                 nb_try_twice <- try(NB_Reg(formula = c(counts_1, counts_2) ~ 1, data = as.data.frame(c(counts_1, counts_2)), verbose = FALSE), silent = TRUE)
+                options(warn = 0)
+                options(show.error.messages = TRUE)
                 if ("try-error" %in% class(nb_try_twice)) {
                     print("MLE of NB failed!")
                     results_gene[1, "Remark"] <- "NB failed!"
@@ -622,7 +634,7 @@ DEalem <- function(counts, group, parallel = FALSE, BPPARAM = bpparam()) {
         results <- matrix(data = NA, nrow = geneNum, ncol = 22, dimnames = list(row.names(counts_norm), c("theta_1", "theta_2", "mu_1", "mu_2", "size_1", "size_2", "prob_1", "prob_2", "total_mean_1", "total_mean_2", "foldChange", "norm_total_mean_1", "norm_total_mean_2", "norm_foldChange", "chi2LR1", "pvalue_LR2", "pvalue_LR3", "FDR_LR2", "FDR_LR3", "pvalue", "pvalue.adj.FDR", "Remark")))
         results <- as.data.frame(results)
         for (i in 1:geneNum) {
-            cat("\r", paste0("DEsingle is analyzing ", i, " of ", geneNum, " expressed genes"))
+            cat("\r", paste0("DEalem is analyzing ", i, " of ", geneNum, " expressed genes"))
             results[i, ] <- CallDE(i)
         }
     } else {

@@ -4,6 +4,12 @@
 using namespace Rcpp;
 using namespace arma;
 
+NumericVector reorder(NumericVector vec, NumericVector ord){ 
+  int n(vec.size());
+  NumericVector reord(n);
+  for(int i=0;i<n;i++) reord[i]=vec[ord[i]-1];
+  return reord;
+}
 arma::vec vec2arma(Rcpp::NumericVector x)
 {
     return arma::vec(x.begin(), x.size(), false); // this code originate from P159 Seamless Rcpp
@@ -152,12 +158,12 @@ List mixNB_MLE(NumericVector X, int nbS, NumericVector avg = NumericVector(), Nu
         }
 
         Rcpp::Function order("order");
-        NumericVector ordAvg = order(esAvg); // order of mean
-        esAvg = reorder(esAvg, ordAvg);      
-        eSize = reorder(eSize, ordAvg);      
-        eWeight = reorder(eWeight, ordAvg);  
-        eProb = reorder(eProb, ordAvg);      
-        esVar = reorder(esVar, ordAvg);      
+        NumericVector ord = order(eWeight); // order of mean
+        esAvg = reorder(esAvg, ord);      
+        eSize = reorder(eSize, ord);      
+        eWeight = reorder(eWeight, ord);  
+        eProb = reorder(eProb, ord);      
+        esVar = reorder(esVar, ord);      
 
         // Check for convergence
         mat newParam = join_cols(esAvg_mat, eSize_mat, eWeight_mat);
