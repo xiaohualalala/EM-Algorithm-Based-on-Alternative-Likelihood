@@ -304,7 +304,7 @@ res <- pheatmap(heatmatrix,
 # 获取聚类结果返回的行顺序 (res$tree_row$order 是一个整数向量)
 ordered_row_names <- rownames(heatmatrix)[res$tree_row$order]
 
-selected_genes <- ordered_row_names[seq(10, 1200, 60)]
+selected_genes <- ordered_row_names[seq(1, 1200, 60)]
 
 selected_cells <- colnames(heatmatrix)[c(seq(1, 81, 9), seq(82, 271, 9))]
 
@@ -333,4 +333,4 @@ f7 <- pheatmap(heatmatrix,
     angle_col = 45 # 列注释倾斜 45 度
 )
 
-ggsave("/Users/guosa/Desktop/毕业论文/figures/heatmap.pdf", f7)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/heatmap.pdf", f7, width = 10, height = 8, dpi = 300)

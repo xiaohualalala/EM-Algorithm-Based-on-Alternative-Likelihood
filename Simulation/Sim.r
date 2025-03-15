@@ -131,8 +131,8 @@ source("../Simulation/MixNB/VisualMixNB.r")
 # 模拟参数
 set.seed(123)
 weights <- c(0.4, 0.6)
-probs <- c(0.25, 0.5)
-sizes <- c(20, 150)
+probs <- c(0.125, 0.25)
+sizes <- c(5, 30)
 
 # 生成数据并进行分组
 res2 <- SimulateMixNB(probs, sizes, weights, 2000)
@@ -143,17 +143,26 @@ ggsave("/Users/guosa/Desktop/毕业论文/figures/mix2.pdf", p3)
 
 set.seed(234)
 weights <- c(0.4, 0.6)
-means <- c(100, 150)
-vars <- c(240, 480)
+means <- c(50, 100)
+vars <- c(400, 400)
 probs <- means / vars
 sizes <- means^2 / (vars - means)
 
+res2 <- SimulateMixNB(probs, sizes, weights, 2000)
+
+p3 <- plotHistDensity(res2$observations, res2$estimation, res2$accuracy)
+
 ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix2.pdf", p3)
+
+source('../Simulation/MixNB/VisualMixNB.r')
 
 # 运行100次，观察准确率与迭代次数
 data <- SimulateMixNBs(probs, sizes, weights, 100, 2000)
 
 df_accuracy <- data.frame(Value = data$accuracy, Type = "Accuracy")
+mean(df_accuracy$Value)
+sd(df_accuracy$Value)
+
 df_iterations <- data.frame(Value = data$iterations, Type = "Iterations")
 mean(df_iterations$Value)
 sd(df_iterations$Value)
@@ -193,9 +202,9 @@ ggsave("/Users/guosa/Desktop/毕业论文/figures/mix5.pdf", p6)
 
 # 模拟参数
 
-weights <- c(0.2, 0.5, 0.3)
-probs <- c(0.1, 0.2, 0.3)
-sizes <- c(10, 50, 150)
+weights <- c(0.2, 0.3, 0.5)
+probs <- c(0.1, 0.3, 0.2)
+sizes <- c(10, 125, 50)
 
 # 生成数据并进行分组
 res3 <- SimulateMixNB(probs, sizes, weights, 2000)
@@ -206,11 +215,15 @@ p4 <- plotHistDensity(res3$observations, res3$estimation, res3$accuracy)
 ggsave("/Users/guosa/Desktop/毕业论文/figures/mix3.pdf", p4)
 
 set.seed(234)
-weights <- c(0.2, 0.5, 0.3)
-means <- c(120, 180, 240)
-vars <- c(300, 600, 300)
+weights <- c(0.2, 0.3, 0.5)
+means <- c(100, 300, 200)
+vars <- c(1000, 1000, 1000)
 probs <- means / vars
 sizes <- means^2 / (vars - means)
+
+res3 <- SimulateMixNB(probs, sizes, weights, 2000)
+
+p4 <- plotHistDensity(res3$observations, res3$estimation, res3$accuracy)
 
 ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix3.pdf", p4)
 
@@ -238,25 +251,78 @@ weight_mean <- sapply(1:K, function(i) mean(sapply(df_weight, `[`, i)))
 weight_sd <- sapply(1:K, function(i) sd(sapply(df_weight, `[`, i)))
 
 p5 <- grid.arrange(p3, p4, nrow = 2)
-ggsave("/Users/guosa/Desktop/毕业论文/figures/mix6.pdf", p5, width = 10, height = 8, dpi = 300)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/mix6.pdf", p5, width = 8, height = 7.5, dpi = 300)
 
 ggsave("/Users/guosa/Desktop/yudabian0221/figures/mix6.pdf", p5)
 
 # confusion matrix
-conf_matrix <- confusionMatrix(as.factor(res$predicted_labels), as.factor(res$true_labels))
+conf_matrix <- confusionMatrix(as.factor(res2$predicted_labels), as.factor(res2$true_labels))
 conf_matrix
 
 # roc
 library(pROC)
 library(caret)
 
-roc_curve2 <- roc(res2$true_labels, res2$prediction, plot = TRUE, print.auc = TRUE)
-roc_curve3 <- roc(res3$true_labels, res3$prediction, plot = TRUE, print.auc = TRUE)
+roc_curve2 <- roc(res2$true_labels, res2$postProbs[,1], plot = TRUE, print.auc = TRUE)
+
+roc_curve3_1 <- roc(res3$true_labels == 1, res3$postProbs[,1], plot = TRUE, print.auc = TRUE)
+
+roc_curve3_2 <- roc(res3$true_labels == 2, res3$postProbs[,2], plot = TRUE, print.auc = TRUE)
+
+roc_curve3_3 <- roc(res3$true_labels == 3, res3$postProbs[,3], plot = TRUE, print.auc = TRUE)
+
 pdf("/Users/guosa/Desktop/毕业论文/figures/ROC_Curve.pdf")
 plot(roc_curve2, col = "coral", main = "ROC Curves", print.auc = TRUE, auc.polygon = FALSE)
-plot(roc_curve3, col = "navy", add = TRUE, print.auc = TRUE, auc.polygon = FALSE, print.auc.y = 0.4)
+plot(roc_curve3_3, col = "navy", add = TRUE, print.auc = TRUE, auc.polygon = FALSE, print.auc.y = 0.4)
 legend("bottomright", legend = c("K=2", "K=3"), col = c("coral", "navy"), lwd = 2)
 dev.off()
+
+
+roc_list <- list()
+auc_list <- list()
+
+
+
+# 遍历每个类别
+for (i in 1:3) {
+  # 提取当前类别的真实标签（二值化）
+  true_labels <- as.numeric(res3$true_labels == levels(factor(res3$true_labels)[i]))
+  
+  # 计算ROC曲线和AUC
+  roc_obj <- roc(true_labels, res3$postProbs[, i])
+  auc_value <- auc(roc_obj)
+  
+  # 存储结果
+  roc_list[[i]] <- roc_obj
+  auc_list[[i]] <- auc_value
+}
+# 创建绘图数据框
+plot_data <- data.frame()
+for (i in 1:3) {
+  temp_df <- data.frame(
+    FPR = 1 - roc_list[[i]]$specificities,
+    TPR = roc_list[[i]]$sensitivities,
+    Class = paste("Class", i-1, " (AUC=", round(auc_list[[i]], 2), ")", sep="")
+  )
+  plot_data <- rbind(plot_data, temp_df)
+}
+
+# 绘制曲线
+ggplot(plot_data, aes(x = FPR, y = TPR, color = Class)) +
+  geom_line(size = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+  labs(x = "False Positive Rate", y = "True Positive Rate", 
+       title = "ROC Curves for 3-Class Classification") +
+  theme_minimal() +
+  scale_color_manual(values = c("blue", "red", "green"))
+
+
+install.packages("pROC") 
+install.packages("multiROC")
+library(multiROC)
+library(pROC)
+
+
 
 ## ZINB
 # 模拟参数
@@ -353,7 +419,7 @@ p10 <-
 ggplot(rates, aes(x = prob, y = avg_rate, color = as.factor(size))) +
   geom_line(size = 1) +
   geom_point() +
-  ylim(0.4, 1) +
+  ylim(0.42, 0.98) +
   geom_errorbar(aes(ymin = avg_rate - sd_rate, ymax = avg_rate + sd_rate), width = 0.01, linetype = "twodash") +
   scale_color_brewer(palette = "Set1") + 
   labs(x = "Prob", y = "Convergence Rate", color = "Size", title = "Convergence Rate vs Prob") +
@@ -375,12 +441,12 @@ for (i in 1:200){
 p12 <- 
 ggplot(rates, aes(x = n, y = rate)) +
   geom_point(color='red', size=0.8) +
-  labs(x = "n", y = "Convergence Rate vs Sample Size") +
+  labs(x = "n", y = "Convergence Rate", title= "Convergence Rate vs Sample Size") +
   theme_bw()+
   ylim(0.5, 0.65) +
-  annotate("text", x = max(rates$n), y = 0.65, label = "Size=1 \\ Prob=0.6", hjust=1, vjust=1, color = "blue", size = 5)
+  annotate("text", x = max(rates$n), y = 0.65, label = "Size=1.0 \n Prob=0.6", hjust=1, vjust=1, color = "blue", size = 5)
 
-ggsave("/Users/guosa/Desktop/毕业论文/figures/rate3.pdf", p12)
+ggsave("/Users/guosa/Desktop/毕业论文/figures/rate3.pdf", p12, width = 8, height = 6, dpi = 300)
 
 library(Rcpp)
 sourceCpp("../Simulation/NB/SimulateNB.cpp")
@@ -466,20 +532,3 @@ ggsave("/Users/guosa/Desktop/毕业论文/figures/error_3.pdf", p19, width = 16,
 
 source("../Simulation/scRNA.r", chdir = TRUE)
 
-
-
-
-# 定义theta取值
-theta <- seq(0.001, 0.999, length.out = 1000)
-
-# 计算函数值 f(theta) = log(-1/log(1-theta))
-f_theta <- log(-1 / log(1 - theta)) + log(theta)
-
-# 绘图
-plot(theta, f_theta, type = "l", col = "blue", lwd = 2,
-     main = expression(paste("Plot of ", log(-1/log(1-theta)))),
-     xlab = expression(theta),
-     ylab = expression(log(-1/log(1-theta))))
-
-# 添加参考线
-abline(h = 0, col = "gray", lty = 2)
